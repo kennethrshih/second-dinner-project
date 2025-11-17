@@ -31,7 +31,8 @@
         align-items: center;
         justify-content: center;
         padding: 2rem;
-        overflow: hidden;
+        overflow-x: hidden;
+        overflow-y: auto;
       }
 
       .frame {
@@ -293,6 +294,8 @@
         text-overflow: ellipsis;
         max-width: 100%;
         box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+        touch-action: manipulation;
       }
 
       .stat-pill:hover {
@@ -336,6 +339,7 @@
       @media (max-width: 960px) {
         body {
           padding: 1rem;
+          background-attachment: scroll;
         }
 
         .frame {
@@ -348,18 +352,51 @@
       }
 
       @media (max-width: 780px) {
+        body {
+          padding: 0.75rem;
+          align-items: flex-start;
+          background-attachment: scroll;
+        }
+
         .frame {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto;
+          grid-template-rows: auto 1fr;
+          height: auto;
+          min-height: auto;
+          max-height: none;
+          width: 100%;
+          border-radius: 16px;
+          overflow: visible;
+        }
+
+        main {
+          grid-template-columns: 1fr;
+          grid-template-rows: auto 1fr;
           height: auto;
         }
 
+        .character-stage {
+          padding: 1rem;
+          height: auto;
+          min-height: 250px;
+        }
+
+        .character-card {
+          width: 100%;
+          max-width: 280px;
+          margin: 0 auto;
+        }
+
         aside {
-          flex-direction: row;
-          overflow-x: auto;
-          padding: 1.5rem;
+          flex-direction: column;
+          overflow-x: visible;
+          overflow-y: visible;
+          padding: 1.25rem;
           gap: 1rem;
-          align-items: center;
+          align-items: stretch;
+          border-left: none;
+          border-top: 1px solid var(--card-border);
+          height: auto;
         }
 
         .panel-title,
@@ -372,18 +409,116 @@
           transform: none !important;
         }
 
-        main {
+        .overlay {
+          position: static;
+          transform: none;
+          opacity: 1;
+          pointer-events: auto;
+          border-right: none;
+          border-bottom: 1px solid var(--card-border);
+          height: auto;
+          padding: 1.25rem;
+          gap: 1rem;
+        }
+
+        .overlay-header {
+          flex-direction: column;
+          gap: 0.75rem;
+        }
+
+        .overlay-subtitle {
+          font-size: 0.85rem;
+        }
+
+        .stats-header {
+          font-size: 0.95rem;
+          margin: 0.25rem 0 0.5rem 0;
+        }
+
+        .stat {
           grid-template-columns: 1fr;
-          grid-template-rows: auto auto;
+          gap: 0.5rem;
+        }
+
+        .stat-pill {
+          width: 100%;
+          padding: 0.6rem 1rem;
+          font-size: 0.7rem;
+        }
+
+        .stat-bar {
+          height: 10px;
+        }
+
+        .stat-value {
+          font-size: 0.9rem;
+        }
+
+        .right-stat-card {
+          padding: 0.75rem 1rem;
+        }
+
+        .right-stat-title {
+          font-size: 0.9rem;
+        }
+
+        .right-copy-box {
+          padding: 1rem;
+          max-height: none;
+          overflow-y: visible;
+        }
+
+        .right-copy-text {
+          font-size: 0.85rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        body {
+          padding: 0.5rem;
+        }
+
+        .frame {
+          border-radius: 12px;
+        }
+
+        .character-stage {
+          padding: 0.75rem;
+          min-height: 200px;
+        }
+
+        .character-card {
+          max-width: 100%;
+        }
+
+        aside {
+          padding: 1rem;
         }
 
         .overlay {
-          position: static;
-          transform: translateY(20px);
-          opacity: 1;
-          pointer-events: auto;
-          border-left: none;
-          border-top: 1px solid var(--card-border);
+          padding: 1rem;
+        }
+
+        .overlay-subtitle {
+          font-size: 0.8rem;
+        }
+
+        .stats-header {
+          font-size: 0.85rem;
+        }
+
+        .stat-pill {
+          padding: 0.5rem 0.9rem;
+          font-size: 0.65rem;
+        }
+
+        .right-stat-card,
+        .right-copy-box {
+          padding: 0.75rem;
+        }
+
+        .right-copy-text {
+          font-size: 0.8rem;
         }
       }
     </style>
@@ -573,6 +708,9 @@
         const card = document.querySelector('.character-card');
         
         if (video && card) {
+          const isMobile = window.innerWidth <= 780;
+          const baseWidth = isMobile ? Math.min(280, window.innerWidth - 40) : 280;
+          
           // Wait for video metadata to load
           if (video.readyState >= 1) {
             const videoWidth = video.videoWidth || video.naturalWidth;
@@ -580,13 +718,10 @@
             
             if (videoWidth && videoHeight) {
               const videoAspectRatio = videoWidth / videoHeight;
-              const currentWidth = 280; // Base width
-              
-              // Calculate height based on video aspect ratio
-              const calculatedHeight = currentWidth / videoAspectRatio;
+              const calculatedHeight = baseWidth / videoAspectRatio;
               
               // Set the card dimensions to match video aspect ratio
-              card.style.width = currentWidth + 'px';
+              card.style.width = baseWidth + 'px';
               card.style.height = calculatedHeight + 'px';
             }
           } else {
@@ -597,10 +732,9 @@
               
               if (videoWidth && videoHeight) {
                 const videoAspectRatio = videoWidth / videoHeight;
-                const currentWidth = 280; // Base width
-                const calculatedHeight = currentWidth / videoAspectRatio;
+                const calculatedHeight = baseWidth / videoAspectRatio;
                 
-                card.style.width = currentWidth + 'px';
+                card.style.width = baseWidth + 'px';
                 card.style.height = calculatedHeight + 'px';
               }
             });
@@ -620,6 +754,13 @@
           video.addEventListener('loadedmetadata', adjustVideoFrame);
         }
       }
+
+      // Adjust video on window resize for mobile responsiveness
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(adjustVideoFrame, 100);
+      });
     </script>
   </body>
 </html>
